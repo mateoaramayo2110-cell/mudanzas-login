@@ -7,6 +7,7 @@ import { auth, isFirebaseConfigured } from '../src/config/firebaseConfig';
 import Login from '../screens/Login';
 import SignUp from '../screens/SignUp';
 import Home from '../screens/Home';
+import colors from '../src/theme/colors';
 
 const Stack = createStackNavigator();
 
@@ -29,18 +30,53 @@ export default function Navigation() {
   }
 
   if (user === undefined) {
-    return <View style={styles.center}><ActivityIndicator size="large" /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: colors.primary,
+            elevation: 3, // Sombra para Android
+            shadowColor: '#000', // Sombra para iOS
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+          },
+          headerTintColor: '#FFFFFF',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            fontSize: 18,
+          },
+          headerTitleAlign: 'center', // Centrado en Android e iOS
+          headerBackTitleVisible: false, // Oculta texto secundario de retorno en iOS
+          cardStyle: { backgroundColor: '#F8F9FA' },
+        }}
+      >
         {user ? (
-          <Stack.Screen name="Home" component={Home} options={{ title: 'Inicio' }} />
+          <Stack.Screen
+            name="Home"
+            component={Home}
+            options={{ title: 'Mudanzas Salta - Inicio' }}
+          />
         ) : (
           <>
-            <Stack.Screen name="Login" component={Login} options={{ title: 'Iniciar sesión' }} />
-            <Stack.Screen name="SignUp" component={SignUp} options={{ title: 'Registro' }} />
+            <Stack.Screen
+              name="Login"
+              component={Login}
+              options={{ title: 'Iniciar Sesión' }}
+            />
+            <Stack.Screen
+              name="SignUp"
+              component={SignUp}
+              options={{ title: 'Crear Cuenta' }}
+            />
           </>
         )}
       </Stack.Navigator>
@@ -49,6 +85,16 @@ export default function Navigation() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  message: { textAlign: 'center', fontSize: 16 },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: '#F8F9FA',
+  },
+  message: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#333',
+  },
 });
