@@ -8,6 +8,7 @@ import Login from '../screens/Login';
 import SignUp from '../screens/SignUp';
 import Home from '../screens/Home';
 import colors from '../src/theme/colors';
+import fonts from '../src/theme/fonts';
 
 const Stack = createStackNavigator();
 
@@ -51,7 +52,7 @@ export default function Navigation() {
           },
           headerTintColor: '#FFFFFF',
           headerTitleStyle: {
-            fontWeight: 'bold',
+            fontFamily: fonts.bold,
             fontSize: 18,
           },
           headerTitleAlign: 'center', // Centrado en Android e iOS

@@ -15,6 +15,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { auth } from '../src/config/firebaseConfig';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import colors from '../src/theme/colors';
+import fonts from '../src/theme/fonts';
 
 export default function SignUp({ navigation }) {
   const [firstName, setFirstName] = useState('');
@@ -247,12 +248,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
+    fontFamily: fonts.bold,
     fontSize: 22,
-    fontWeight: 'bold',
     color: colors.textDark,
     textAlign: 'center',
   },
   subtitle: {
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textMuted,
     marginBottom: 16,
@@ -260,8 +262,8 @@ const styles = StyleSheet.create({
   },
   label: {
     alignSelf: 'flex-start',
+    fontFamily: fonts.semiBold,
     fontSize: 14,
-    fontWeight: '700',
     color: colors.textDark,
     marginBottom: 6,
     marginTop: 6,
@@ -286,6 +288,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textDark,
   },
@@ -310,8 +313,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: 'bold',
     letterSpacing: 0.5,
   },
   loginButton: {
@@ -319,11 +322,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   loginText: {
+    fontFamily: fonts.regular,
     color: colors.textMuted,
     fontSize: 14,
   },
   loginTextBold: {
+    fontFamily: fonts.bold,
     color: colors.primaryDark,
-    fontWeight: 'bold',
   },
 });

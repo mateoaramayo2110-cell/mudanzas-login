@@ -13,6 +13,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { signOut } from 'firebase/auth';
 import { auth } from '../src/config/firebaseConfig';
 import colors from '../src/theme/colors';
+import fonts from '../src/theme/fonts';
 
 export default function Home({ navigation }) {
   const currentUser = auth?.currentUser;
@@ -133,12 +134,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   welcomeText: {
+    fontFamily: fonts.bold,
     fontSize: 22,
-    fontWeight: 'bold',
     color: colors.textDark,
     textAlign: 'center',
   },
   emailText: {
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textMuted,
     marginTop: 4,
@@ -173,17 +175,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   badgeText: {
+    fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: '700',
     color: '#117A65',
   },
   infoTitle: {
+    fontFamily: fonts.bold,
     fontSize: 18,
-    fontWeight: 'bold',
     color: colors.textDark,
     marginBottom: 8,
   },
   infoDescription: {
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textMuted,
     lineHeight: 20,
@@ -200,6 +203,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   featureText: {
+    fontFamily: fonts.medium,
     fontSize: 14,
     color: colors.textDark,
     flex: 1,
@@ -226,8 +230,8 @@ const styles = StyleSheet.create({
   },
   buttonLogoutText: {
     color: '#FFFFFF',
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: 'bold',
     letterSpacing: 0.5,
   },
 });
