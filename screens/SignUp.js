@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { auth } from '../src/config/firebaseConfig';
@@ -25,8 +27,39 @@ export default function SignUp({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Referencia y estado de teclado exclusivos para Android (no afecta a iOS)
+  const scrollViewRef = useRef(null);
+  const [androidKeyboardPadding, setAndroidKeyboardPadding] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+      setAndroidKeyboardPadding(e.endCoordinates ? e.endCoordinates.height : 280);
+    });
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setAndroidKeyboardPadding(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const scrollToFieldAndroid = (yOffset) => {
+    if (Platform.OS === 'android') {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: yOffset, animated: true });
+      }, 120);
+    }
+  };
 
   const handleSignUp = async () => {
+    if (loading) return;
+
     if (!firstName.trim() || !lastName.trim() || !email.trim() || !password || !confirmPassword) {
       Alert.alert("Campos requeridos", "Todos los campos son obligatorios.");
       return;
@@ -46,11 +79,23 @@ export default function SignUp({ navigation }) {
       return;
     }
 
+    Keyboard.dismiss();
+    setLoading(true);
+
     let credential;
     try {
       credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
     } catch (error) {
-      console.error('Error de registro:', error.code, error.message);
+      setLoading(false);
+      // Si la cuenta ya se creó (por ejemplo, doble toque en Android que resolvió el primero), no mostrar error
+      if (
+        error.code === 'auth/email-already-in-use' &&
+        auth?.currentUser?.email?.toLowerCase() === email.trim().toLowerCase()
+      ) {
+        return;
+      }
+
+      console.log('Error de registro:', error.code, error.message);
       let errorMessage = "Hubo un problema al registrar la cuenta.";
       switch (error.code) {
         case 'auth/email-already-in-use':
@@ -87,8 +132,16 @@ export default function SignUp({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        ref={scrollViewRef}
+        contentContainerStyle={[
+          styles.scrollContent,
+          // Solo Android: padding dinámico para el teclado
+          Platform.OS === 'android' && androidKeyboardPadding > 0 && {
+            paddingBottom: androidKeyboardPadding + 60,
+          },
+        ]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'android' ? 'on-drag' : 'interactive'}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.card}>
@@ -111,6 +164,7 @@ export default function SignUp({ navigation }) {
               placeholderTextColor="#999"
               value={firstName}
               onChangeText={setFirstName}
+              onFocus={() => scrollToFieldAndroid(0)}
             />
           </View>
 
@@ -124,6 +178,7 @@ export default function SignUp({ navigation }) {
               placeholderTextColor="#999"
               value={lastName}
               onChangeText={setLastName}
+              onFocus={() => scrollToFieldAndroid(50)}
             />
           </View>
 
@@ -140,6 +195,7 @@ export default function SignUp({ navigation }) {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              onFocus={() => scrollToFieldAndroid(120)}
             />
           </View>
 
@@ -155,6 +211,7 @@ export default function SignUp({ navigation }) {
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
+              onFocus={() => scrollToFieldAndroid(240)}
             />
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
@@ -180,6 +237,7 @@ export default function SignUp({ navigation }) {
               onChangeText={setConfirmPassword}
               secureTextEntry={!showConfirmPassword}
               autoCapitalize="none"
+              onFocus={() => scrollToFieldAndroid(340)}
             />
             <TouchableOpacity
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -193,14 +251,24 @@ export default function SignUp({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={handleSignUp} activeOpacity={0.85}>
-            <Text style={styles.buttonText}>Registrarse</Text>
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleSignUp}
+            activeOpacity={0.85}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Registrarse</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.loginButton}
             onPress={() => navigation.navigate('Login')}
             activeOpacity={0.7}
+            disabled={loading}
           >
             <Text style={styles.loginText}>
               ¿Ya tienes cuenta? <Text style={styles.loginTextBold}>Inicia sesión</Text>
@@ -310,6 +378,9 @@ const styles = StyleSheet.create({
         elevation: 3,
       },
     }),
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: '#FFFFFF',

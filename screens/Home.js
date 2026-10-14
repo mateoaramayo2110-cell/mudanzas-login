@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,9 +16,22 @@ import colors from '../src/theme/colors';
 import fonts from '../src/theme/fonts';
 
 export default function Home({ navigation }) {
-  const currentUser = auth?.currentUser;
-  const userName = currentUser?.displayName || 'Usuario';
-  const userEmail = currentUser?.email || '';
+  const [userName, setUserName] = useState(auth?.currentUser?.displayName || 'Usuario');
+  const userEmail = auth?.currentUser?.email || '';
+
+  useEffect(() => {
+    if (auth?.currentUser) {
+      if (!auth.currentUser.displayName) {
+        auth.currentUser.reload().then(() => {
+          if (auth.currentUser?.displayName) {
+            setUserName(auth.currentUser.displayName);
+          }
+        }).catch(() => {});
+      } else {
+        setUserName(auth.currentUser.displayName);
+      }
+    }
+  }, []);
 
   const handleLogOut = async () => {
     Alert.alert(

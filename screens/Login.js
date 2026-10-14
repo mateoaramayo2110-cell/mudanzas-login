@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -21,19 +23,54 @@ export default function Login({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Exclusivo para Android (no afecta a iOS)
+  const scrollViewRef = useRef(null);
+  const [androidKeyboardPadding, setAndroidKeyboardPadding] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+      setAndroidKeyboardPadding(e.endCoordinates ? e.endCoordinates.height : 260);
+    });
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setAndroidKeyboardPadding(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const scrollToFieldAndroid = (yOffset) => {
+    if (Platform.OS === 'android') {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: yOffset, animated: true });
+      }, 120);
+    }
+  };
 
   const handleLogin = async () => {
+    if (loading) return;
+
     if (!email.trim() || !password) {
       Alert.alert("Campos requeridos", "Por favor ingresa tu correo y contraseña.");
       return;
     }
+
+    Keyboard.dismiss();
+    setLoading(true);
 
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
       Alert.alert("¡Bienvenido!", "Has iniciado sesión correctamente.");
       // Firebase actualiza el estado de autenticación y navega a Home.
     } catch (error) {
-      console.error('Error de inicio de sesión:', error.code, error.message);
+      setLoading(false);
+      console.log('Error de inicio de sesión:', error.code, error.message);
       let errorMessage = "Hubo un problema al iniciar sesión.";
       switch (error.code) {
         case 'auth/invalid-email':
@@ -63,8 +100,16 @@ export default function Login({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        ref={scrollViewRef}
+        contentContainerStyle={[
+          styles.scrollContent,
+          // Solo Android: padding dinámico para el teclado
+          Platform.OS === 'android' && androidKeyboardPadding > 0 && {
+            paddingBottom: androidKeyboardPadding + 50,
+          },
+        ]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'android' ? 'on-drag' : 'interactive'}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.card}>
@@ -89,6 +134,7 @@ export default function Login({ navigation }) {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              onFocus={() => scrollToFieldAndroid(0)}
             />
           </View>
 
@@ -103,6 +149,7 @@ export default function Login({ navigation }) {
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
+              onFocus={() => scrollToFieldAndroid(140)}
             />
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
@@ -116,14 +163,24 @@ export default function Login({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin} activeOpacity={0.85}>
-            <Text style={styles.buttonText}>Iniciar Sesión</Text>
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            activeOpacity={0.85}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Iniciar Sesión</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.signUpButton}
             onPress={() => navigation.navigate('SignUp')}
             activeOpacity={0.7}
+            disabled={loading}
           >
             <Text style={styles.signUpText}>
               ¿No tienes cuenta aún? <Text style={styles.signUpTextBold}>Regístrate acá</Text>
@@ -233,6 +290,9 @@ const styles = StyleSheet.create({
         elevation: 3,
       },
     }),
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: '#FFFFFF',
